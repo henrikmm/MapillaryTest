@@ -1,0 +1,26 @@
+<View>
+  <View style="position:sticky; top:0; z-index:100; background:#111; padding:12px; border-radius:8px; margin-bottom:10px;">
+    <Header value="Altura da grama:"/>
+    <Choices name="height_class" toName="original" choice="single" required="true" showInLine="true">
+      <Choice value="1" alias="Baixo" hotkey="1" hint="Rasteira / acamada — quase no nível do solo"/>
+      <Choice value="2" alias="Médio" hotkey="2" hint="Ereta mas contida — visível na faixa lateral"/>
+      <Choice value="3" alias="Alto"  hotkey="3" hint="Volumosa e ereta — domina a faixa de domínio"/>
+    </Choices>
+
+    <Header value="Confiança:"/>
+    <Choices name="confidence" toName="original" choice="single" required="true" showInLine="true">
+      <Choice value="certo"   hotkey="q" hint="Tenho certeza — não é caso limite"/>
+      <Choice value="incerto" hotkey="w" hint="Caso limite — poderia ser a classe adjacente"/>
+    </Choices>
+  </View>
+
+  <Image name="original" value="$original" zoom="true" zoomControl="true"/>
+
+  <View style="background:#1c1c1c; border-radius:8px; padding:12px; margin-top:12px;">
+    <Header value="ÂNCORAS DE REFERÊNCIA"/>
+    <Header value="1 — BAIXO  → grama rasteira, acamada no solo, quase invisível na lateral"/>
+    <Header value="2 — MÉDIO  → grama ereta, visível na faixa, mas contida — não domina a cena"/>
+    <Header value="3 — ALTO   → grama volumosa e ereta, claramente acima do nível do acostamento"/>
+    <Header value="Dúvida entre classes? Marque a menor e use confiança = INCERTO"/>
+  </View>
+</View>

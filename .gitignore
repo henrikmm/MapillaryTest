@@ -1,0 +1,24 @@
+# Environment
+.env
+.envrc
+
+# Python
+.venv/
+__pycache__/
+
+# Image data (large binary files)
+images/
+crops/
+outputs/
+
+# Large dataset / annotation files
+*.json
+*.jsonl
+
+# Model weights
+training/runs/
+*.pth
+*.pt
+
+# Tooling
+.codex/

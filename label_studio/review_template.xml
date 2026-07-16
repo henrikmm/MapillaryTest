@@ -1,0 +1,30 @@
+<View>
+  <View style="position:sticky; top:0; z-index:100; background:#111; color:#fff; padding:12px; border-radius:8px; margin-bottom:10px;">
+    <Header value="Revisao assistida por modelo"/>
+    <Text name="review_meta" value="$review_text"/>
+
+    <Header value="Altura revisada:"/>
+    <Choices name="height_class" toName="original" choice="single" required="true" showInLine="true">
+      <Choice value="Baixo" hotkey="1" hint="Rasteira / acamada - quase no nivel do solo"/>
+      <Choice value="Médio" hotkey="2" hint="Ereta mas contida - visivel na faixa lateral"/>
+      <Choice value="Alto"  hotkey="3" hint="Volumosa e ereta - domina a faixa de dominio"/>
+    </Choices>
+
+    <Header value="Confianca revisada:"/>
+    <Choices name="confidence" toName="original" choice="single" required="true" showInLine="true">
+      <Choice value="certo"   hotkey="q" hint="Tenho certeza - nao e caso limite"/>
+      <Choice value="incerto" hotkey="w" hint="Caso limite - poderia ser a classe adjacente"/>
+    </Choices>
+  </View>
+
+  <Image name="original" value="$original" zoom="true" zoomControl="true"/>
+
+  <View style="background:#1c1c1c; color:#fff; border-radius:8px; padding:12px; margin-top:12px;">
+    <Header value="REGRA DE REVISAO"/>
+    <Header value="Rotule pela condicao predominante da faixa lateral util, nao pelo pior ponto isolado."/>
+    <Header value="BAIXO: maioria rasteira/aparada; tufos altos pontuais nao dominam."/>
+    <Header value="MEDIO: acima do rasteiro, mas sem massa alta continua dominante."/>
+    <Header value="ALTO: vegetacao alta, volumosa e continua domina a lateral."/>
+    <Header value="Se a decisao depender da fronteira entre classes adjacentes, use incerto."/>
+  </View>
+</View>

@@ -1,0 +1,96 @@
+# Central configuration for EXP-MotionFromStructure.
+# All scripts read this file. Override at the command line with --config <path>.
+
+paths:
+  # Root of the EXP-MotionFromStructure folder; resolved at runtime.
+  exp_root: .
+  # Source dataset.
+  images_dir:    /home/henri/projects/MapillaryTest/santamarienseZero-shot/raw/images
+  metadata_jsonl: /home/henri/projects/MapillaryTest/santamarienseZero-shot/raw/metadata.jsonl
+  # External depth experiment to optionally reuse pre-computed depth maps.
+  depth_experiment_dir: /home/henri/projects/MapillaryTest/DINOEXPERIMENT/depth_experiment
+  # All outputs of this experiment go here.
+  outputs_dir: ./outputs
+
+stage0_select:
+  exclude_panoramas: true
+  min_frames_per_sequence: 15
+  # Mapillary often delivers one giant logical sequence per capture session.
+  # We split it into sub-sequences whenever the inter-frame jump exceeds this.
+  # Observed median gap on this dataset is ~42 m (vehicle, sparse sampling),
+  # so 80 m is a reasonable cut for "the camera was off / teleported".
+  split_gap_m: 80.0
+  # OpenSfM doesn't scale well past ~150 frames. Cap chunks for tractable SfM
+  # runtimes; consecutive chunks share frames (`subsequence_overlap`) so we can
+  # later stitch their reconstructions if we want continuity.
+  max_frames_per_subsequence: 100
+  subsequence_overlap: 5
+  min_track_length_m: 200.0    # cumulative path length per sub-sequence
+  pilot_size: 3                # how many sub-sequences to take into stage 1 by default
+
+# --------------------------------------------------------------------------
+# stage1_calibrate — one-shot intrinsic calibration of the camera rig.
+# Same physical fisheye camera across all 999 frames, so intrinsics are a
+# property of the rig and only need to be solved ONCE. We run pycolmap on a
+# small set of frames with extreme-conservative caps (WSL has 7.6 GiB RAM and
+# previous attempts at scale crashed it). The recovered intrinsics get reused
+# by every per-frame stage downstream — no per-sequence SfM after this.
+# --------------------------------------------------------------------------
+calibrate:
+  backend: pycolmap
+  camera_model: OPENCV_FISHEYE
+  # Frame selection — take a short contiguous window from the chosen pilot
+  # sub-sequence so consecutive frames overlap (sequential matching needs that).
+  source_pilot_index: 0          # which pilot sub-sequence to draw from (0 = first)
+  n_frames: 25
+  start_frame_offset: 10         # skip the first few — they're often noisy
+  # Resource caps. With these, peak RAM ~300 MB, peak threads = 1.
+  max_image_size: 1024
+  max_num_features: 2048
+  num_threads: 1
+  matching_overlap: 3
+  device: cpu                    # pycolmap pip wheel is CPU-only; see ASSUMPTIONS.md A7
+
+depth:
+  # See ASSUMPTIONS.md A2 — pretrained, not fine-tuned on our dataset.
+  model_id: depth-anything/Depth-Anything-V2-Metric-Outdoor-Large-hf
+  device: cuda
+  batch_size: 1
+  # Reuse pre-computed depth maps if the depth experiment already has them.
+  reuse_existing: true
+  # How to interpret the network's depth output when lifting pixels to 3D:
+  # "ray" = depth is Euclidean distance along the ray (better on fisheye)
+  # "z"   = depth is distance along the optical axis (correct for perspective)
+  # See ASSUMPTIONS.md A9.
+  convention: ray
+
+ground_plane:
+  # Camera mount height is a DISCOVERY target, not an input. See ASSUMPTIONS.md A1.
+  # Setting to null disables the per-sequence absolute-height sanity check.
+  expected_camera_height_m: null
+  tolerance_frac: 0.30                 # only used if expected_camera_height_m is set
+  cross_sequence_outlier_sigma: 3.0    # flag sequences whose height is >Nσ from the cross-sequence median
+  ransac_threshold_m: 0.10
+  ransac_iterations: 2000
+  min_inlier_points: 80
+
+depth_align:
+  # Median-ratio rescale of depth model output -> SfM metric scale, computed over road pixels.
+  road_pixel_min_count: 500
+  outlier_clip_pct: [5, 95]
+  acceptable_relative_error: 0.10  # success criterion: ≤10% disagreement after alignment
+
+vegetation_height:
+  # Discard pixels where the ray's ground intersection is farther than this from camera.
+  max_ground_distance_m: 30.0
+  min_height_m: 0.0
+  max_height_m: 3.0   # anything above this is treated as not-grass for diagnostic plots
+  min_pixels_per_patch: 50
+
+diagnostics:
+  save_overlays: true
+  save_pointclouds: true
+  overlay_alpha: 0.55
+
+logging:
+  level: INFO
